@@ -7,11 +7,11 @@ import word_data
 TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
-# Respond to /start
+# /start command response
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Hi! 🐝 I'm *VocabBee*! I’ll send you 10 cool words every evening. Stay tuned! 📚", parse_mode="Markdown")
+    await update.message.reply_text("Hi! 🐝 I'm VocabBee! I’ll send you 10 cool words every evening. Stay tuned! 📚", parse_mode="Markdown")
 
-# Send daily words
+# daily word sender function
 async def send_words_daily(app):
     while True:
         now = datetime.datetime.now()
@@ -38,19 +38,16 @@ async def send_words_daily(app):
                 await app.bot.send_audio(chat_id=CHAT_ID, audio=audio)
             await asyncio.sleep(2)
 
-# Main function
-async def main():
+# bot startup
+async def run_bot():
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-
-    # Start the background task
     asyncio.create_task(send_words_daily(app))
-
+    await app.initialize()
+    await app.start()
     print("Bot is running...")
-    await app.run_polling()
+    await app.updater.start_polling()
+    await app.updater.idle()
 
 if __name__ == "__main__":
-    import asyncio
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
-    loop.run_forever()
+    asyncio.run(run_bot())
