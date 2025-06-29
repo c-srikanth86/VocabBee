@@ -1,13 +1,18 @@
 import os, random, asyncio, datetime
-from telegram import Bot
+from telegram import Update, Bot
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from gtts import gTTS
 import word_data
 
 TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
-bot = Bot(token=TOKEN)
 
-async def send_words():
+# Respond to /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hi! 🐝 I'm *VocabBee*! I’ll send you 10 cool words every evening. Stay tuned! 📚", parse_mode="Markdown")
+
+# Send daily words
+async def send_words_daily(app):
     while True:
         now = datetime.datetime.now()
         target = now.replace(hour=random.randint(19, 21), minute=random.randint(0, 59), second=0)
@@ -26,12 +31,23 @@ async def send_words():
                 f"📌 *Sentence:* {w['sentence']}\n"
                 f"🧩 *Trick:* {w['trick']}"
             )
-            await bot.send_message(chat_id=CHAT_ID, text=msg, parse_mode="Markdown")
+            await app.bot.send_message(chat_id=CHAT_ID, text=msg, parse_mode="Markdown")
             tts = gTTS(' '.join(list(w['word'].upper())))
             tts.save("audio.mp3")
             with open("audio.mp3", "rb") as audio:
-                await bot.send_audio(chat_id=CHAT_ID, audio=audio)
+                await app.bot.send_audio(chat_id=CHAT_ID, audio=audio)
             await asyncio.sleep(2)
 
+# Main function
+async def main():
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+
+    # Start the background task
+    asyncio.create_task(send_words_daily(app))
+
+    print("Bot is running...")
+    await app.run_polling()
+
 if __name__ == "__main__":
-    asyncio.run(send_words())
+    asyncio.run(main())
