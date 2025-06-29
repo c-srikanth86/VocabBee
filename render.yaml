@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: vocabbee-bot
+    env: python
+    buildCommand: ""
+    startCommand: python main.py
