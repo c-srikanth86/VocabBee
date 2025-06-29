@@ -4,17 +4,16 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from gtts import gTTS
 import word_data
 
-# Get bot token and chat ID from environment
+# Get token and chat ID from Render environment
 TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
-# /start command
+# /start reply
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hi! 🐝 I'm VocabBee! I’ll send you 10 cool words every evening. Stay tuned! 📚")
 
-# Daily word sender
+# Send 10 words every day between 7PM–9PM
 async def send_words_daily(app):
-    await app.wait_until_ready()
     while True:
         now = datetime.datetime.now()
         target = now.replace(hour=random.randint(19, 21), minute=random.randint(0, 59), second=0)
@@ -41,14 +40,22 @@ async def send_words_daily(app):
                 await app.bot.send_audio(chat_id=CHAT_ID, audio=audio)
             await asyncio.sleep(2)
 
-# Main bot runner
+# Main app startup
 async def main():
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    asyncio.create_task(send_words_daily(app))
-    print("✅ Bot is running...")
-    await app.run_polling()
 
-# Start everything
+    # Background task for sending words
+    asyncio.create_task(send_words_daily(app))
+
+    print("✅ Bot is running...")
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()  # Optional, still works with run_forever()
+
+# Correct async loop for Render
 if __name__ == "__main__":
-    asyncio.run(main())
+    import asyncio
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
+    loop.run_forever()
