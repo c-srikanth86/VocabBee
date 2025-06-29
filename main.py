@@ -11,7 +11,7 @@ CHAT_ID = os.environ["CHAT_ID"]
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hi! 🐝 I'm VocabBee! I’ll send you 10 cool words every evening. Stay tuned! 📚")
 
-# Daily word sender
+# Daily message sender
 async def send_words_daily(app):
     while True:
         now = datetime.datetime.now()
@@ -38,7 +38,7 @@ async def send_words_daily(app):
                 await app.bot.send_audio(chat_id=CHAT_ID, audio=audio)
             await asyncio.sleep(2)
 
-# Bot runner
+# Run bot
 async def main():
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -46,9 +46,5 @@ async def main():
     print("✅ Bot is running...")
     await app.run_polling()
 
-# Run the bot correctly on Render
 if __name__ == "__main__":
-    import asyncio
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
-    loop.run_forever()
+    asyncio.run(main())
